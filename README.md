@@ -34,10 +34,28 @@ AgriSense/
 
 ⚙️ Installation & Setup
 Clone the repository
-git clone https://github.com/your-username/AgriSense.git
+git clone https://github.com/paljitendra2003/AgriSense.git
 Navigate to the project directory
 cd AgriSense
 Install dependencies
 pip install -r requirements.txt
 Run the application
 python app.py
+
+
+📌 Use Case
+Helps farmers detect crop diseases early
+Reduces dependency on manual inspection
+Improves crop yield through AI-driven insights
+
+
+🏆 Achievements
+Developed as a real-world AI solution for agriculture
+Recognized as a winning project in a hackathon
+
+
+👨‍💻 Author
+
+Pal Jitendra
+B.Tech (IT) | AI & ML Enthusiast
+🔗 GitHub: https://github.com/paljitendra2003
