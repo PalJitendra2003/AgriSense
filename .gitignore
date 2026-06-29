@@ -1,0 +1,14 @@
+# IDE files
+.vscode/
+.idea/
+
+# System / OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment / Credentials
+.env
+.env.local
+.git-credentials
+*.log

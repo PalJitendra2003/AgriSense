@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriSense - Crop Disease Detection & Plant Care Core</title>
+  <meta name="description" content="Protect your crops with advanced AI crop disease detection. Get confidence ratings, instant precautions, and curative treatments for healthier harvests.">
+  
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Supabase JS Client library CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header id="site-header">
+    <div class="container nav-container">
+      <a href="#home" class="logo" id="nav-logo">
+        <i class="fa-solid fa-leaf"></i>
+        <span data-translate="nav_brand">AgriSense</span>
+      </a>
+      
+      <ul class="nav-links">
+        <li class="nav-item active" data-view="landing"><a href="#home" data-translate="nav_home"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li class="nav-item" data-view="analyze"><a href="#analyze" data-translate="nav_scanner"><i class="fa-solid fa-magnifying-glass-chart"></i> AI Scanner</a></li>
+        <li class="nav-item" data-view="library"><a href="#library" data-translate="nav_treatments"><i class="fa-solid fa-book-medical"></i> Treatments</a></li>
+        <li class="nav-item" data-view="heatmap"><a href="#heatmap" data-translate="nav_heatmap"><i class="fa-solid fa-map-location-dot"></i> Heatmap</a></li>
+        <li class="nav-item" data-view="weather"><a href="#weather" data-translate="nav_weather"><i class="fa-solid fa-cloud-sun-rain"></i> Live Weather</a></li>
+        <!-- <li class="nav-item" data-view="bot"><a href="#bot" data-translate="nav_bot"><i class="fa-solid fa-robot"></i> AI Bot</a></li> -->
+        <li class="nav-item" data-view="about"><a href="#about" data-translate="nav_about"><i class="fa-solid fa-circle-info"></i> About Us</a></li>
+        <li class="nav-item" data-view="history"><a href="#history" data-translate="nav_logs"><i class="fa-solid fa-clock-rotate-left"></i> Logs</a></li>
+        
+        <!-- Mobile-only: Language, Login, User Profile (hidden on desktop via CSS) -->
+        <li class="mobile-nav-extras">
+          <div class="language-dropdown-container">
+            <i class="fa-solid fa-globe"></i>
+            <select id="mobile-language-switcher" class="language-select">
+              <option value="en">English (EN)</option>
+              <option value="gu">ગુજરાતી (GU)</option>
+            </select>
+          </div>
+          <div id="mobile-guest-nav-actions">
+            <a href="#login" class="btn btn-primary btn-nav-auth" id="btn-mobile-login-redirect" data-translate="nav_login"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</a>
+          </div>
+          <div class="user-profile-bubble" id="mobile-user-nav-bubble" style="display:none;">
+            <div class="user-avatar" id="mobile-user-avatar-lbl">R</div>
+            <span class="user-name" id="mobile-user-name-lbl">Farmer</span>
+            <button class="btn-logout" id="btn-mobile-logout" title="Log Out"><i class="fa-solid fa-right-from-bracket"></i></button>
+          </div>
+        </li>
+      </ul>
+      
+      <!-- Mobile Menu Toggle Button -->
+      <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      
+      <div class="nav-actions">
+        <!-- Gujarati / English Translation Dropdown -->
+        <div class="language-dropdown-container">
+          <i class="fa-solid fa-globe"></i>
+          <select id="language-switcher" class="language-select">
+            <option value="en">English (EN)</option>
+            <option value="gu">ગુજરાતી (GU)</option>
+          </select>
+        </div>
+
+        <!-- Custom Navbar Scan CTA -->
+        <!-- <button class="btn btn-nav-scan" id="nav-btn-scan" data-translate="nav_new_scan"><i class="fa-solid fa-camera"></i> New Scan</button> -->
+        
+        <!-- Guest State Actions -->
+        <div id="guest-nav-actions">
+          <a href="#login" class="btn btn-primary btn-nav-auth" id="btn-nav-login-redirect" data-translate="nav_login"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</a>
+        </div>
+        
+        <!-- Logged-in Farmer State Actions -->
+        <div class="user-profile-bubble" id="user-nav-bubble">
+          <div class="user-avatar" id="user-avatar-lbl">R</div>
+          <span class="user-name" id="user-name-lbl">Rajesh Kumar</span>
+          <button class="btn-logout" id="btn-nav-logout" title="Log Out"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Developer Database Banner -->
+  <!-- <div class="dev-banner" id="dev-mode-banner">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span><strong>Developer Mode:</strong> Running in Local Offline Storage (Fallback). Add your Supabase credentials in <code>js/app.js</code> to enable secure cloud synchronization.</span>
+  </div> -->
+
+  <!-- MAIN SPA CONTENT VIEWS -->
+  <main class="container" id="main-content-container">
+    
+    <!-- SECTION 1: LANDING PAGE -->
+    <section id="view-landing" class="view-section active">
+      <div class="hero">
+        <div class="hero-content">
+          <div class="green-tag" data-translate="hero_tag"><i class="fa-solid fa-seedling"></i> CERTIFIED CROP DIAGNOSTICS</div>
+          <h1 data-translate="hero_title">Smarter Farming,<br>Healthier Crops.</h1>
+          <p data-translate="hero_desc">Protect your yields with advanced plant disease diagnostics. Upload a leaf photo to instantly detect pathogen strains, retrieve statistical confidence, and receive tailored care treatments.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" id="hero-btn-scan" data-translate="hero_btn_scan"><i class="fa-solid fa-camera"></i> Analyze Crop Now</button>
+            <button class="btn btn-secondary" id="hero-btn-history" data-translate="hero_btn_history"><i class="fa-solid fa-clock"></i> View Past Logs</button>
+          </div>
+        </div>
+        
+        <!-- Premium Leaf-Shaped Masked Hero Photo Container -->
+        <div class="hero-visual-container">
+          <div class="hero-leaf-mask">
+            <img class="hero-field-img" src="assets/farmer_greenhouse.png" alt="Farmer checking greenhouse plants">
+          </div>
+          <div class="hero-floating-badge badge-top-right">
+            <i class="fa-solid fa-bolt"></i>
+            <span data-translate="hero_badge_confident">98% Confident</span>
+          </div>
+          <div class="hero-floating-badge badge-bottom-left">
+            <i class="fa-solid fa-circle-check"></i>
+            <span data-translate="hero_badge_verified">Verified Cure</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4-Column Statistic Counter Banner -->
+      <div class="landing-stats-banner glass-card">
+        <div class="stats-item">
+          <h3>15k+</h3>
+          <p data-translate="stats_farmers">Active Farmers Registered</p>
+        </div>
+        <div class="stats-item">
+          <h3>98.2%</h3>
+          <p data-translate="stats_accuracy">AI Accuracy Confidence</p>
+        </div>
+        <div class="stats-item">
+          <h3>300k+</h3>
+          <p data-translate="stats_scans">Foliage Scans Resolved</p>
+        </div>
+        <div class="stats-item">
+          <h3>24/7</h3>
+          <p data-translate="stats_support">Certified Agronomist Help</p>
+        </div>
+      </div>
+
+      <!-- Features Highlights Grid -->
+      <div class="section-header">
+        <h2 data-translate="feat_section_title">Built to Support Farmers</h2>
+        <p data-translate="feat_section_desc">Empowering agricultural decisions with precision diagnostics, immediate treatment plans, and continuous crop health logs.</p>
+      </div>
+
+      <div class="features-grid-custom">
+        <!-- Card 1: Left solid white card -->
+        <div class="glass-card feature-promo-card">
+          <div class="promo-text-side">
+            <div class="promo-icon"><i class="fa-solid fa-microscope"></i></div>
+            <h3 data-translate="promo_title_1">Instant AI Diagnostics</h3>
+            <p data-translate="promo_desc_1">Click or drag-and-drop crop leaves. Our deep neural networks analyze textures and colors to isolate diseases within 3 seconds.</p>
+            <a href="#analyze" class="promo-link" data-translate="promo_link_1">Open Diagnostic Core <i class="fa-solid fa-chevron-right"></i></a>
+          </div>
+          <div class="promo-image-side">
+            <img src="assets/leaf_diagnostics.png" alt="Crop leaf under scientific examination">
+          </div>
+        </div>
+
+        <!-- Card 2: Right solid green card -->
+        <div class="glass-card feature-promo-card bg-forest-green text-white">
+          <div class="promo-text-side">
+            <div class="promo-icon text-white"><i class="fa-solid fa-kit-medical"></i></div>
+            <h3 data-translate="promo_title_2">Actionable Treatment Plans</h3>
+            <p data-translate="promo_desc_2">Receive transparent organic remedies and precise chemical solutions immediately after diagnosis. Designed to arrest pathogen growth without crop toxicity.</p>
+            <a href="#library" class="promo-link text-white" data-translate="promo_link_2">Browse Remedy Archive <i class="fa-solid fa-chevron-right"></i></a>
+          </div>
+          <div class="promo-bullet-side">
+            <div class="bullet-row"><i class="fa-solid fa-circle-check"></i> <span data-translate="bullet_1">Organic Pruning & Mulching</span></div>
+            <div class="bullet-row"><i class="fa-solid fa-circle-check"></i> <span data-translate="bullet_2">Copper-based Fungicides</span></div>
+            <div class="bullet-row"><i class="fa-solid fa-circle-check"></i> <span data-translate="bullet_3">Bactericide Spore Isolation</span></div>
+            <div class="bullet-row"><i class="fa-solid fa-circle-check"></i> <span data-translate="bullet_4">24hr Extension Team Support</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle features row -->
+      <div class="features-grid">
+        <div class="glass-card feature-card">
+          <div class="feature-icon">
+            <i class="fa-solid fa-percentage"></i>
+          </div>
+          <h3 data-translate="feat_title_1">Statistical Confidence</h3>
+          <p data-translate="feat_desc_1">Receive transparent confidence indexes evaluated directly by deep-learning visual model matches.</p>
+        </div>
+
+        <div class="glass-card feature-card">
+          <div class="feature-icon">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <h3 data-translate="feat_title_2">Scan Vault</h3>
+          <p data-translate="feat_desc_2">Every crop scan is cataloged securely in the cloud via Supabase, creating an accessible visual timeline of crop health.</p>
+        </div>
+
+        <div class="glass-card feature-card">
+          <div class="feature-icon">
+            <i class="fa-solid fa-cloud-sun-rain"></i>
+          </div>
+          <h3 data-translate="feat_title_3">Microclimate Alerts</h3>
+          <p data-translate="feat_desc_3">Pair weather metrics with spraying warnings to select the optimal hour for foliar fertilizer and copper sprays.</p>
+        </div>
+      </div>
+
+      <!-- Ready to Protect CTA Banner -->
+      <div class="ready-banner glass-card bg-forest-green text-white text-center">
+        <h2 data-translate="ready_title">Ready to Protect Your Yield?</h2>
+        <p data-translate="ready_desc">Join thousands of smart farmers defending their fields with advanced diagnostic algorithms.</p>
+        <button class="btn btn-secondary" id="landing-cta-btn" style="margin-top: 20px;"><i class="fa-solid fa-circle-play"></i> <span data-translate="ready_btn">Start Your First Scan</span></button>
+      </div>
+
+      <!-- Launch Chat Widget callout footer box -->
+      <div class="expert-id-block" style="margin-top: 40px; background: #ffffff;">
+        <div class="expert-id-content">
+          <h3>Have Questions or Need Direct Advice?</h3>
+          <p>Ask our AgriSense AI Botanist assistant regarding soil fertilizers, humidity, or persistent spot anomalies.</p>
+        </div>
+        <a href="#bot" class="btn btn-primary"><i class="fa-solid fa-comments"></i> Chat with Botanist AI</a>
+      </div>
+    </section>
+    
+    <!-- SECTION 2: CROP ANALYZER / PREDICTOR -->
+    <section id="view-analyze" class="view-section">
+      <div class="section-header" style="margin-bottom: 40px;">
+        <h2>Plant Health Diagnostics</h2>
+        <p>Upload a clean photo of the infected crop leaf to execute the neural prediction model.</p>
+      </div>
+
+      <div class="analyzer-layout-custom">
+        <!-- Left Side: Scanner Upload Container -->
+        <div class="glass-card scanner-container-custom">
+          <!-- Main Upload Dropzone -->
+          <div class="upload-zone-custom" id="crop-dropzone">
+            <div class="upload-circle">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <h3>Upload Leaf Image</h3>
+            <p>Drag and drop a photo here, or click to browse</p>
+            <input type="file" id="crop-file-input" accept="image/*" style="display: none;">
+            <button class="btn btn-secondary" id="btn-camera-trigger"><i class="fa-solid fa-camera-retro"></i> Use Live Camera</button>
+          </div>
+
+          <!-- Camera Stream Interface (Dynamic) -->
+          <div class="camera-view-container" id="crop-camera-container">
+            <video class="camera-stream" id="crop-video-stream" autoplay playsinline></video>
+            <div class="camera-controls" style="position: absolute; bottom: 20px; left: 0; width: 100%; display: flex; justify-content: center; gap: 12px; z-index: 15;">
+              <button class="btn btn-primary" id="btn-camera-capture"><i class="fa-solid fa-circle-dot"></i> Capture</button>
+              <button class="btn btn-secondary" id="btn-camera-cancel">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Scanning Overlay Overlay -->
+          <div class="scan-overlay" id="crop-scan-overlay">
+            <img class="preview-image-scan" id="crop-scan-preview" src="" alt="Farming upload preview">
+            <div class="scan-line"></div>
+            <div class="scan-progress-spinner"></div>
+            <div class="scan-status-log" id="crop-scan-status">Connecting to neural core...</div>
+          </div>
+
+          <!-- 3-Card Instructions Bar -->
+          <div class="instructions-row">
+            <div class="instruction-step">
+              <div class="step-num">1</div>
+              <h5>Focus Foliage</h5>
+              <p>Position infected spot centered in bright daylight.</p>
+            </div>
+            <div class="instruction-step">
+              <div class="step-num">2</div>
+              <h5>AI Scan</h5>
+              <p>System reads color texture patterns within 3s.</p>
+            </div>
+            <div class="instruction-step">
+              <div class="step-num">3</div>
+              <h5>Cure Plan</h5>
+              <p>Retrieve immediate organic and chemical treatments.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Recent Scans Sidebar & Pro Tip Card -->
+        <div class="analyzer-sidebar">
+          
+          <!-- Recent Scans Sidebar Panel -->
+          <div class="glass-card sidebar-panel-card">
+            <div class="sidebar-header">
+              <h4>Recent Scans Timeline</h4>
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div class="sidebar-recent-list" id="analyzer-sidebar-scans">
+              <!-- Dynamically populated or Mock entries -->
+              <div class="sidebar-scan-row">
+                <div class="scan-row-left">
+                  <div class="severity-bullet bg-warning"></div>
+                  <div class="scan-row-info">
+                    <h5>Tomato - Early Blight</h5>
+                    <span>May 22, 12:45 PM</span>
+                  </div>
+                </div>
+                <span class="scan-badge">94.8%</span>
+              </div>
+              <div class="sidebar-scan-row">
+                <div class="scan-row-left">
+                  <div class="severity-bullet bg-success"></div>
+                  <div class="scan-row-info">
+                    <h5>General - Healthy Crop</h5>
+                    <span>May 20, 09:15 AM</span>
+                  </div>
+                </div>
+                <span class="scan-badge">99.4%</span>
+              </div>
+              <div class="sidebar-scan-row">
+                <div class="scan-row-left">
+                  <div class="severity-bullet bg-error"></div>
+                  <div class="scan-row-info">
+                    <h5>Potato - Late Blight</h5>
+                    <span>May 18, 04:30 PM</span>
+                  </div>
+                </div>
+                <span class="scan-badge">98.1%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Premium Agronomist Pro Tip Card -->
+          <div class="glass-card pro-tip-card bg-forest-green text-white">
+            <div class="pro-tip-header">
+              <div class="tip-icon"><i class="fa-solid fa-lightbulb"></i></div>
+              <h4>AGRONOMIST PRO TIP</h4>
+            </div>
+            <p>Early detection saves up to 45% of crop yields. Scan leaf undersides twice a week during damp, humid cycles. Spores flourish in canopy shade before breaking out on top leaf stems.</p>
+          </div>
+
+          <!-- Preloaded Sample Leaf Selector -->
+          <div class="glass-card samples-wrapper-custom">
+            <h4>Quick Testing Samples</h4>
+            <div class="samples-grid">
+              <button class="sample-leaf-btn" data-sample="tomato_early_blight">
+                <img class="leaf-mock-thumb" src="assets/tomato_blight.png" alt="Tomato early blight" style="object-fit: cover; border: 1px solid hsl(var(--border-glass));">
+                <span>Tomato Blight</span>
+              </button>
+              <button class="sample-leaf-btn" data-sample="corn_common_rust">
+                <img class="leaf-mock-thumb" src="assets/corn_rust.png" alt="Corn common rust" style="object-fit: cover; border: 1px solid hsl(var(--border-glass));">
+                <span>Corn Rust</span>
+              </button>
+              <button class="sample-leaf-btn" data-sample="potato_late_blight">
+                <img class="leaf-mock-thumb" src="assets/potato_blight.png" alt="Potato late blight" style="object-fit: cover; border: 1px solid hsl(var(--border-glass));">
+                <span>Potato Blight</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2.5: DEDICATED RESULTS SCREEN -->
+    <section id="view-results" class="view-section">
+      <!-- Results Page Breadcrumbs & Action Header -->
+      <div class="results-action-header">
+        <div class="breadcrumbs">
+          <a href="#home">Home</a> <i class="fa-solid fa-chevron-right"></i> 
+          <a href="#analyze">Scanner</a> <i class="fa-solid fa-chevron-right"></i> 
+          <span class="active">Diagnostic Results</span>
+        </div>
+        <div class="results-actions-right">
+          <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Download Report</button>
+          <a href="#analyze" class="btn btn-primary"><i class="fa-solid fa-camera"></i> Start New Scan</a>
+        </div>
+      </div>
+
+      <div class="results-layout-grid" id="results-card-wrapper">
+        
+        <!-- Left Column: Image Viewer with infection Bounding Box & HUD Table -->
+        <div class="glass-card results-media-panel">
+          <div class="leaf-image-box">
+            <!-- Infection bounding box layered dynamically over crop picture -->
+            <div class="leaf-bounding-box-overlay">
+              <div class="bounding-box-border">
+                <span class="bounding-tag">[PATIENT ANOMALY: STAGE 2]</span>
+              </div>
+            </div>
+            <img id="result-leaf-image" class="result-display-leaf-img" src="assets/tomato_blight.png" alt="Scanned crop patient specimen">
+            <div class="zoom-indicators">
+              <button class="zoom-btn"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+              <button class="zoom-btn"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+              <button class="zoom-btn"><i class="fa-solid fa-expand"></i></button>
+            </div>
+          </div>
+
+          <!-- Agriculture Diagnostic HUD Matrix Table -->
+          <div class="results-hud-table">
+            <h4>specimen micro-diagnostics</h4>
+            <div class="hud-grid">
+              <div class="hud-item">
+                <span>Diagnostic ID</span>
+                <strong>REF-28829</strong>
+              </div>
+              <div class="hud-item">
+                <span>Specimen Type</span>
+                <strong id="hud-specimen-type">Solanum lycopersicum</strong>
+              </div>
+              <div class="hud-item">
+                <span>Field Temperature</span>
+                <strong>29.2 °C</strong>
+              </div>
+              <div class="hud-item">
+                <span>Foliar Humidity</span>
+                <strong>58.4 %</strong>
+              </div>
+              <div class="hud-item">
+                <span>Pigment Index</span>
+                <strong>0.44 Chl</strong>
+              </div>
+              <div class="hud-item">
+                <span>Estimated Spore Density</span>
+                <strong>4,200/cm²</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Crop Diagnosis Details, Precaution Cards & Curative Alert Block -->
+        <div class="glass-card results-details-panel">
+          <div class="results-header-summary">
+            <div class="disease-badge-title">
+              <span class="severity-pill" id="result-severity">Medium</span>
+              <h3 class="disease-name" id="result-disease">Tomato Early Blight</h3>
+              <span class="scientific-name" id="result-scientific">Alternaria solani</span>
+            </div>
+            
+            <!-- Custom Circle Confidence Gauge -->
+            <div class="confidence-gauge">
+              <svg class="confidence-svg" viewBox="0 0 80 80">
+                <circle class="confidence-track" cx="40" cy="40" r="35"></circle>
+                <circle class="confidence-bar" id="result-confidence-bar" cx="40" cy="40" r="35"></circle>
+              </svg>
+              <div class="confidence-text">
+                <span id="result-confidence-val">94.8%</span>
+                <span class="confidence-label">Match</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab System for Details -->
+          <div class="result-tabs-nav">
+            <button class="result-view-tab active" data-tab="tab-description">Diagnosis</button>
+            <button class="result-view-tab" data-tab="tab-precautions">Precautions</button>
+            <button class="result-view-tab" data-tab="tab-cure">Cure / Treatment</button>
+          </div>
+
+          <!-- Tab Content 1: Description -->
+          <div class="result-panel-tabcontent active" id="tab-description">
+            <p style="line-height: 1.7;" id="result-description-text">Early blight is caused by the fungus Alternaria solani. It is a common foliage disease of tomatoes that initially appears as small, brown-to-black spots on older leaves, which enlarge and form concentric...</p>
+            
+            <!-- Actionable Treatment Alert block in solid Forest Green -->
+            <div class="remedy-alert-box bg-forest-green text-white">
+              <div class="remedy-alert-header">
+                <i class="fa-solid fa-circle-check"></i>
+                <h5 data-translate="agronomist_verified_cure">agronomist verified immediate cure</h5>
+              </div>
+              <p id="result-remedy-text">Prune lower foliage to eliminate source spores. Apply a certified foliar spray containing copper hydroxide early in the evening window. Avoid overhead sprinkling to hold propagation.</p>
+            </div>
+
+            <!-- Suggested Fertilizer Recommendation box -->
+            <div class="fertilizer-recommendation-box" style="margin-top: 15px; padding: 16px; border-radius: 12px; background: hsl(var(--primary) / 8%); border-left: 4px solid hsl(var(--primary));">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; color: hsl(var(--primary)); font-weight: 600;">
+                <i class="fa-solid fa-flask"></i>
+                <span style="text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em;" data-translate="suggested_fertilizer">Suggested Fertilizer / Nutrient</span>
+              </div>
+              <p style="font-size: 14px; color: var(--foreground-muted); line-height: 1.5; margin: 0;" id="result-fertilizer-text">High-potassium foliar feed & organic copper-based fungicide spray</p>
+            </div>
+
+            <!-- Bottom microclimate weather status banner -->
+            <div class="microclimate-status-bar">
+              <div class="status-left">
+                <i class="fa-solid fa-cloud-showers-heavy"></i>
+                <div class="status-info">
+                  <strong>Rain Threat Detected</strong>
+                  <span>Incoming showers in 4 hours</span>
+                </div>
+              </div>
+              <span class="alert-tag bg-warning-alert text-dark">SPRAY WINDOW HIGH RISK</span>
+            </div>
+          </div>
+
+          <!-- Tab Content 2: Precautions -->
+          <div class="result-panel-tabcontent" id="tab-precautions">
+            <ul class="details-list details-list-precautions" id="result-precautions-list">
+              <!-- Injected via JS -->
+            </ul>
+          </div>
+
+          <!-- Tab Content 3: Cure -->
+          <div class="result-panel-tabcontent" id="tab-cure">
+            <ul class="details-list details-list-cure" id="result-cure-list">
+              <!-- Injected via JS -->
+            </ul>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 3: SCAN HISTORY TIMELINE -->
+    <section id="view-history" class="view-section">
+      <div class="section-header" style="margin-bottom: 40px;">
+        <h2>Farmer Scan History</h2>
+        <p>A persistent archive of your past diagnostic assessments, matching logs, and treatments.</p>
+      </div>
+
+      <div class="history-section-wrapper">
+        <!-- Stats summary panel -->
+        <div class="stats-header-bar">
+          <div class="glass-card stat-card">
+            <div class="stat-icon icon-blue">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+            <div class="stat-info">
+              <h4 id="stat-total-scans">0</h4>
+              <p>Total Scans</p>
+            </div>
+          </div>
+
+          <div class="glass-card stat-card">
+            <div class="stat-icon icon-green">
+              <i class="fa-solid fa-heart-pulse"></i>
+            </div>
+            <div class="stat-info">
+              <h4 id="stat-healthy-scans">0%</h4>
+              <p>Healthy Ratio</p>
+            </div>
+          </div>
+
+          <div class="glass-card stat-card">
+            <div class="stat-icon icon-orange">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="stat-info">
+              <h4 id="stat-infected-scans">0</h4>
+              <p>Infected Detected</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- History Timeline Grid -->
+        <div class="glass-card" style="padding: 24px;">
+          <!-- Empty State -->
+          <div class="history-empty-placeholder" id="history-empty-view">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <h3>No Scan Records Yet</h3>
+            <p>Your logged scans will appear in a chronological timeline here once you complete diagnostics.</p>
+          </div>
+
+          <!-- History Timeline Entries -->
+          <div class="timeline-list" id="history-entries-list" style="display: none;">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: TREATMENT LIBRARY -->
+    <section id="view-library" class="view-section">
+      <div class="section-header" style="margin-bottom: 40px;">
+        <h2>Agronomy Treatment Library</h2>
+        <p>Comprehensive lookup archive detailing clinical protocols, pathogens, and seasonal crop remedies.</p>
+      </div>
+      
+      <div class="library-filters-container">
+        <div class="library-search-row">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="library-search-input" id="lib-search-input" placeholder="Search diseases or crops (e.g. Tomato, Blight, Corn)...">
+        </div>
+        
+        <div class="library-tabs" id="lib-crop-tabs">
+          <button class="library-tab-btn active" data-crop="all">All Crops</button>
+          <button class="library-tab-btn" data-crop="Tomato">Tomato</button>
+          <button class="library-tab-btn" data-crop="Potato">Potato</button>
+          <button class="library-tab-btn" data-crop="Corn">Corn</button>
+          <button class="library-tab-btn" data-crop="Apple">Apple</button>
+          <button class="library-tab-btn" data-crop="Rice">Rice</button>
+          <button class="library-tab-btn" data-crop="Grape">Grape</button>
+          <button class="library-tab-btn" data-crop="Citrus">Citrus</button>
+        </div>
+      </div>
+      
+      <!-- Dynamic Library Card Grid -->
+      <div class="library-grid-custom">
+        <!-- Disease Cards dynamically injected here -->
+        <div class="library-grid" id="lib-disease-grid">
+          <!-- Injected dynamically via JS -->
+        </div>
+
+        <!-- Request ID dotted expert card -->
+        <div class="glass-card library-card dotted-expert-card">
+          <div class="expert-card-top text-center">
+            <div class="expert-dot-icon"><i class="fa-solid fa-circle-question"></i></div>
+            <h3>Can't identify a specific crop anomaly?</h3>
+            <p>Upload a clean photograph of the infected leaf to submit it directly to our Extension Specialist Advisory Board for manual review.</p>
+          </div>
+          <div class="expert-card-bottom" style="margin-top: 30px; text-align: center;">
+            <button class="btn btn-primary" id="lib-contact-expert-btn"><i class="fa-solid fa-user-doctor"></i> Request Expert ID</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="pagination-row">
+        <button class="pagination-btn"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+        <button class="pagination-btn active">1</button>
+        <button class="pagination-btn">2</button>
+        <button class="pagination-btn">3</button>
+        <span class="pagination-dots">...</span>
+        <button class="pagination-btn">12</button>
+        <button class="pagination-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </section>
+
+    <!-- SECTION 5: DISEASE HEATMAP -->
+    <section id="view-heatmap" class="view-section">
+      <div class="section-header" style="margin-bottom: 40px;">
+        <h2>Crop Disease Outbreak Heatmap</h2>
+        <p>Real-time regional pathogen spread reports and biological hazard risks monitored globally.</p>
+      </div>
+      
+      <div class="heatmap-layout">
+        <!-- Map Visualization -->
+        <div class="glass-card heatmap-dashboard-card">
+          <h3 style="margin-bottom: 16px;"><i class="fa-solid fa-globe"></i> Active Spreading Risk Map</h3>
+          <div class="heatmap-visual-box">
+            <!-- SVG Mock Map with colored regions representing outbreak intensity -->
+            <svg class="map-svg-placeholder" viewBox="0 0 400 240" style="background: #e2e8f0; border-radius: 12px; width: 100%; height: 100%;">
+              <!-- Map shapes representing regional crop fields -->
+              <path d="M10,10 L180,10 L140,110 L10,90 Z" fill="#006c35" opacity="0.15" stroke="#ffffff" stroke-width="2" id="map-region-north"></path>
+              <path d="M180,10 L390,10 L390,120 L140,110 Z" fill="#e11d48" opacity="0.3" stroke="#ffffff" stroke-width="2" id="map-region-east"></path>
+              <path d="M10,90 L140,110 L100,230 L10,230 Z" fill="#ea580c" opacity="0.25" stroke="#ffffff" stroke-width="2" id="map-region-west"></path>
+              <path d="M140,110 L390,120 L390,230 L100,230 Z" fill="#006c35" opacity="0.2" stroke="#ffffff" stroke-width="2" id="map-region-south"></path>
+              
+              <!-- Outbreak indicator pulses -->
+              <circle cx="280" cy="60" r="8" fill="#e11d48" opacity="0.8">
+                <animate attributeName="r" values="6;14;6" dur="2s" repeatCount="indefinite"></animate>
+              </circle>
+              <circle cx="80" cy="160" r="6" fill="#ea580c" opacity="0.8">
+                <animate attributeName="r" values="5;11;5" dur="2.5s" repeatCount="indefinite"></animate>
+              </circle>
+              
+              <!-- Text Labels -->
+              <text x="50" y="50" font-family="sans-serif" font-size="11" font-weight="bold" fill="#334155">North Zone (Safe)</text>
+              <text x="240" y="90" font-family="sans-serif" font-size="11" font-weight="bold" fill="#e11d48">East Zone (Critical)</text>
+              <text x="30" y="190" font-family="sans-serif" font-size="11" font-weight="bold" fill="#ea580c">West Zone (Warning)</text>
+              <text x="210" y="180" font-family="sans-serif" font-size="11" font-weight="bold" fill="#334155">South Zone (Safe)</text>
+            </svg>
+          </div>
+          
+          <div class="heatmap-legend">
+            <div class="legend-item"><div class="legend-color bg-critical"></div> Critical Risk</div>
+            <div class="legend-item"><div class="legend-color bg-warning-alert"></div> Moderate Alert</div>
+            <div class="legend-item"><div class="legend-color bg-safe"></div> Healthy / Safe</div>
+          </div>
+        </div>
+        
+        <!-- Outbreak Info -->
+        <div class="glass-card outbreaks-card">
+          <div class="region-selector-tabs" id="heatmap-region-tabs">
+            <button class="region-tab active" data-region="east">East Zone Outbreaks</button>
+            <button class="region-tab" data-region="west">West Zone Outbreaks</button>
+            <button class="region-tab" data-region="all">Global Logs</button>
+          </div>
+          
+          <div class="outbreaks-timeline" id="outbreak-records-timeline">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: LIVE WEATHER -->
+    <section id="view-weather" class="view-section">
+      <div class="section-header" style="margin-bottom: 40px;">
+        <h2>Live Meteorological Advisory</h2>
+        <p>Localized agricultural forecast matrices paired with instant crop treatment spraying advisories.</p>
+      </div>
+      
+      <!-- Meteorological Center Top Grid -->
+      <div class="weather-dashboard-header">
+        <div class="location-badge-pill">
+          <i class="fa-solid fa-map-pin"></i> CENTRAL VALLEY HILLS FIELD
+        </div>
+        <div class="current-weather-summary glass-card">
+          <div class="summary-left">
+            <i class="fa-solid fa-sun weather-glow-sun"></i>
+            <div class="temp-digits">24°C</div>
+            <div class="weather-brief">
+              <strong>SUNNY</strong>
+              <span>Wind 12 km/h • Humidity 45%</span>
+            </div>
+          </div>
+          
+          <div class="weather-metrics-custom">
+            <div class="metric-col">
+              <i class="fa-solid fa-temperature-three-quarters"></i>
+              <span>High / Low</span>
+              <strong>28° / 16°</strong>
+            </div>
+            <div class="metric-col">
+              <i class="fa-solid fa-sun"></i>
+              <span>UV Index</span>
+              <strong>7 (High)</strong>
+            </div>
+            <div class="metric-col">
+              <i class="fa-solid fa-cloud-showers-heavy"></i>
+              <span>Rain Chance</span>
+              <strong>10%</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="weather-layout">
+        <!-- Current Weather Card -->
+        <div class="glass-card weather-forecast-card">
+          <div class="weather-header-info">
+            <h3><i class="fa-solid fa-temperature-half"></i> Current Field Conditions</h3>
+            <div class="weather-location-selector">
+              <select id="weather-farm-select">
+                <option value="central_plains">Central Plains Farm</option>
+                <option value="eastern_valleys">Eastern Valleys Field</option>
+                <option value="western_hills">Western Hills Vineyard</option>
+                <option value="southern_delta">Southern Delta Greenhouse</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="weather-current-row">
+            <!-- Weather Big Icon -->
+            <i class="fa-solid fa-cloud-sun" style="font-size: 64px; color: #fbbf24;"></i>
+            <div class="weather-temp-number" id="weather-temp-lbl">29°C</div>
+            <div class="weather-status-badge">
+              <span class="weather-main" id="weather-condition-lbl">Mostly Sunny</span>
+              <span class="weather-descr">Perfect sunlight for farming</span>
+            </div>
+          </div>
+          
+          <div class="weather-metrics-grid">
+            <div class="weather-metric-box">
+              <i class="fa-solid fa-droplet"></i>
+              <h5 id="weather-humidity-lbl">55%</h5>
+              <p>Humidity</p>
+            </div>
+            <div class="weather-metric-box">
+              <i class="fa-solid fa-wind"></i>
+              <h5 id="weather-wind-lbl">8 km/h</h5>
+              <p>Wind Speed</p>
+            </div>
+            <div class="weather-metric-box">
+              <i class="fa-solid fa-cloud-showers-heavy"></i>
+              <h5 id="weather-rain-lbl">12%</h5>
+              <p>Precipitation</p>
+            </div>
+          </div>
+
+          <!-- Soil indicators & moisture metrics -->
+          <div class="soil-weather-indicators" style="margin-top: 30px; border-top: 1px solid hsl(var(--border-glass)); padding-top: 24px;">
+            <h4>soil moisture & evaporation</h4>
+            <div class="indicator-progress-row">
+              <div class="progress-info">
+                <span>Soil Evaporation Index</span>
+                <strong>68% (Optimal)</strong>
+              </div>
+              <div class="progress-bar-container"><div class="progress-bar-fill bg-success" style="width: 68%;"></div></div>
+            </div>
+            <div class="indicator-progress-row" style="margin-top: 16px;">
+              <div class="progress-info">
+                <span>Field Pest Activity Index</span>
+                <strong>40% (Moderate Risk)</strong>
+              </div>
+              <div class="progress-bar-container"><div class="progress-bar-fill bg-warning" style="width: 40%;"></div></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Advisory Details & Weekly Forecast Grid -->
+        <div class="analyzer-sidebar" style="gap: 24px;">
+          <!-- Localized Alarms (Pink Alerts Card) -->
+          <div class="glass-card weather-alerts-card bg-pink-warning">
+            <div class="alert-card-header">
+              <i class="fa-solid fa-circle-exclamation text-error"></i>
+              <h4 class="text-error">WEATHER-DRIVEN PATHOGEN RISKS</h4>
+            </div>
+            <p><strong>Blight Alert:</strong> Combined relative humidity (>85%) with moderate wind gust forecast between 2 PM and 6 PM creates high spore dissemination vulnerability. Consider applying preventative copper early.</p>
+          </div>
+
+          <!-- Advisory Details -->
+          <div class="glass-card weather-advisory-card" style="padding: 24px;">
+            <h3><i class="fa-solid fa-clipboard-check"></i> Agronomist Spraying Suitability</h3>
+            <p style="color: hsl(var(--text-secondary)); font-size: 14px; margin-bottom: 20px;">We check real-time wind speed, humidity, and forecast patterns to calculate spray drift risk.</p>
+            
+            <div class="spraying-meter-box">
+              <div class="suitability-badge suitability-excellent" id="weather-suitability-badge">EXCELLENT SUITABILITY</div>
+              <h4 style="font-size: 20px; color: hsl(var(--text-primary));" id="weather-suitability-title">Safe for Foliar Sprays</h4>
+            </div>
+            
+            <div class="advisory-details-box">
+              <h4 id="weather-advisory-icon"><i class="fa-solid fa-circle-check" style="color: hsl(var(--success));"></i> Current Recommendation</h4>
+              <p id="weather-advisory-text">Low winds (8 km/h) and moderate temperature (29°C) mean minimal spray drift risk. Excellent conditions to apply organic copper-based fungicides or liquid bio-stimulants early in the evening.</p>
+            </div>
+          </div>
+
+          <!-- 7-Day Weather Forecast Grid -->
+          <div class="glass-card weather-weekly-card">
+            <h4>7-Day Agricultural Forecast</h4>
+            <div class="weekly-forecast-grid">
+              <div class="weekly-day-row">
+                <span>Mon</span>
+                <i class="fa-solid fa-sun text-yellow"></i>
+                <strong>28°/16°</strong>
+              </div>
+              <div class="weekly-day-row">
+                <span>Tue</span>
+                <i class="fa-solid fa-cloud-sun text-slate"></i>
+                <strong>27°/15°</strong>
+              </div>
+              <div class="weekly-day-row">
+                <span>Wed</span>
+                <i class="fa-solid fa-cloud-showers-heavy text-blue"></i>
+                <strong>23°/14°</strong>
+              </div>
+              <div class="weekly-day-row">
+                <span>Thu</span>
+                <i class="fa-solid fa-cloud text-slate"></i>
+                <strong>24°/16°</strong>
+              </div>
+              <!-- Friday Highlighted Hot Day -->
+              <div class="weekly-day-row active-hot">
+                <span>Fri</span>
+                <i class="fa-solid fa-fire text-error"></i>
+                <strong class="text-error">32°/20° HOT</strong>
+              </div>
+              <div class="weekly-day-row">
+                <span>Sat</span>
+                <i class="fa-solid fa-sun text-yellow"></i>
+                <strong>29°/17°</strong>
+              </div>
+              <div class="weekly-day-row">
+                <span>Sun</span>
+                <i class="fa-solid fa-sun text-yellow"></i>
+                <strong>28°/16°</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Soil Temperature Map Card -->
+      <div class="glass-card soil-temp-card" style="margin-top: 32px; padding: 30px;">
+        <div class="soil-card-header" style="margin-bottom: 20px;">
+          <h3><i class="fa-solid fa-compass-drafting"></i> Thermal Soil Temperature Map</h3>
+          <span>Microclimate Sensors Injected</span>
+        </div>
+        <div class="soil-thermal-grid-wrapper">
+          <div class="soil-grid-overlay">
+            <span class="thermal-tag tag-a">Block A: 24.2 °C</span>
+            <span class="thermal-tag tag-b">Block B: 26.8 °C</span>
+            <span class="thermal-tag tag-c">Block C: 22.1 °C</span>
+          </div>
+          <!-- High-fidelity background representing fields -->
+          <img class="soil-map-image" src="assets/soil_temp_map.png" alt="Thermal crop field sensors layout" onerror="this.src='assets/farmer_tablet_field.png'">
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: AI BOT PAGE -->
+    <section id="view-bot" class="view-section">
+      <div class="section-header" style="margin-bottom: 40px;">
+        <h2>Dedicated Botanist AI Center</h2>
+        <p>Chat directly with our plant health cognitive expert regarding soil diagnostics, crop anomalies, and botanical care schedules.</p>
+      </div>
+      
+      <div class="bot-page-layout">
+        <!-- Suggestions Sidebar & Recent Conversations list -->
+        <div class="analyzer-sidebar">
+          
+          <!-- Recent Conversations List -->
+          <div class="glass-card sidebar-panel-card">
+            <div class="sidebar-header">
+              <h4>Recent Consultations</h4>
+              <i class="fa-solid fa-message"></i>
+            </div>
+            <div class="sidebar-recent-list">
+              <div class="sidebar-scan-row active">
+                <div class="scan-row-left">
+                  <div class="severity-bullet bg-primary"></div>
+                  <div class="scan-row-info">
+                    <h5>Soil Nitrogen levels</h5>
+                    <span>Active Chat</span>
+                  </div>
+                </div>
+                <span class="chat-count">1</span>
+              </div>
+              <div class="sidebar-scan-row">
+                <div class="scan-row-left">
+                  <div class="severity-bullet bg-warning"></div>
+                  <div class="scan-row-info">
+                    <h5>Wheat Rust remedies</h5>
+                    <span>May 18, 2026</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sidebar-scan-row">
+                <div class="scan-row-left">
+                  <div class="severity-bullet bg-success"></div>
+                  <div class="scan-row-info">
+                    <h5>Mulch spacing protocol</h5>
+                    <span>May 15, 2026</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preset botanical questions box -->
+          <div class="glass-card bot-panel-card" style="padding: 24px;">
+            <h3>Quick Botanical Queries</h3>
+            <p style="color: hsl(var(--text-secondary)); font-size: 13px; margin-bottom: 20px;">Click any preset topic to instantly retrieve expert agronomist recommendations.</p>
+            
+            <div class="bot-suggestions-grid">
+              <div class="bot-suggestion-pill" data-query="How do I cure Early Blight?">
+                <i class="fa-solid fa-flask"></i>
+                <span>Curing Tomato Blight</span>
+              </div>
+              <div class="bot-suggestion-pill" data-query="What is the base watering guideline to prevent leaf mold?">
+                <i class="fa-solid fa-shower"></i>
+                <span>Watering Guidelines</span>
+              </div>
+              <div class="bot-suggestion-pill" data-query="How does excess nitrogen fertilizer affect crop diseases?">
+                <i class="fa-solid fa-seedling"></i>
+                <span>Soil Nitrogen Risks</span>
+              </div>
+              <div class="bot-suggestion-pill" data-query="How to treat corn common rust?">
+                <i class="fa-solid fa-dna"></i>
+                <span>Corn Rust Protocols</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Marcus Miller Profile at footer of sidebar -->
+          <div class="glass-card user-sidebar-profile">
+            <div class="profile-avatar-circle">M</div>
+            <div class="profile-details-info">
+              <h5>Marcus Miller</h5>
+              <span>North Field Manager</span>
+            </div>
+            <i class="fa-solid fa-gear" style="margin-left: auto; color: hsl(var(--text-secondary)); cursor: pointer;"></i>
+          </div>
+        </div>
+        
+        <!-- Full screen chatbot box -->
+        <div class="glass-card bot-chat-container">
+          <div class="bot-chat-header">
+            <div class="bot-chat-avatar"><i class="fa-solid fa-robot"></i></div>
+            <div class="bot-chat-title">
+              <h4>AgriSense Bot Center</h4>
+              <span><i class="fa-solid fa-circle" style="font-size: 8px; margin-right: 4px; color: hsl(var(--success));"></i> Specialist Agronomist AI Online</span>
+            </div>
+          </div>
+          
+          <!-- Chat messages scroll pane with high-fidelity imagery and action recommendations -->
+          <div class="bot-chat-messages" id="bot-page-chat-pane">
+            <div class="msg-bubble msg-bot">
+              Hello Farmer! I am your dedicated full-screen AgriSense Botanist AI assistant. Ask me questions about crops, soil nutrients, seasonal treatments, or crop disease remedies! You can also click the quick queries on the left side to get started immediately.
+            </div>
+            
+            <div class="msg-bubble msg-user">
+              Show me the latest pest scan on Block D.
+            </div>
+
+            <div class="msg-bubble msg-bot chat-rich-message">
+              <p>Specimen scan complete for Block D pest monitoring field drones. Captured imagery confirms early infestation threshold of **Spodoptera frugiperda** on maize leaves. See visual scan below:</p>
+              
+              <!-- Rich Image asset rendering inside bot page chat history -->
+              <div class="chat-embedded-image-container">
+                <img class="chat-drone-img" src="assets/drone_field_pest.png" alt="Field pest visual mapping camera">
+                <span class="image-overlay-lbl">[BLOCK D DRONE SCAN FIELD VECT-12]</span>
+              </div>
+
+              <div class="chat-recommendations-list">
+                <h6>Specialist Action Protocols Required:</h6>
+                <div class="remedy-bullet-row"><i class="fa-solid fa-circle-check"></i> <span>Isolate row blocks 12 to 14 immediately</span></div>
+                <div class="remedy-bullet-row"><i class="fa-solid fa-circle-check"></i> <span>Spray Bacillus thuringiensis organic solution early morning</span></div>
+                <div class="remedy-bullet-row"><i class="fa-solid fa-circle-check"></i> <span>Check soil evaporation matrix below</span></div>
+              </div>
+
+              <!-- Quick action compare soil maps chips -->
+              <div class="chat-action-chips">
+                <button class="chip-btn"><i class="fa-solid fa-compass"></i> Compare Soil Maps</button>
+                <button class="chip-btn"><i class="fa-solid fa-file-pdf"></i> Download Drone Report</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bot-chat-input-bar">
+            <input type="text" class="chat-input" id="bot-page-chat-input" placeholder="Ask your botanical query here...">
+            <button class="btn btn-primary" id="bot-page-chat-submit" style="padding: 10px 18px;"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 8: ABOUT US -->
+    <section id="view-about" class="view-section">
+      <!-- Corporate Banner with crop tracks styling -->
+      <div class="about-corporate-banner text-center text-white bg-forest-green">
+        <div class="banner-overlay-grid"></div>
+        <h2>Bridging Soil Stewardship & Digital Pathology</h2>
+        <p>Providing verified organic controls and chemical solutions to secure harvests worldwide.</p>
+      </div>
+
+      <div class="about-mission-section" style="margin-top: 50px;">
+        <div class="mission-columns">
+          <div class="mission-text-left">
+            <h3>Protecting Harvests, Empowering Communities</h3>
+            <p>Our agronomists analyze localized soil indexes, weather patterns, and leaf tissue diagnostics to provide sustainable, organic precautions and chemical solutions for farming communities worldwide.</p>
+            <p>AgriSense was built with the mission to arrest regional epidemics before they impact consumer prices or strip rural fields of livelihood reserves.</p>
+            
+            <div class="mission-stats-grid">
+              <div class="mission-stat-box">
+                <h4>98%</h4>
+                <span>Farmer Satisfaction</span>
+              </div>
+              <div class="mission-stat-box">
+                <h4>45k+</h4>
+                <span>Registered Farms</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tablet Image display in About Us Mission -->
+          <div class="mission-image-right glass-card">
+            <img src="assets/farmer_tablet_field.png" alt="Agronomist checking fields with tablet device">
+          </div>
+        </div>
+      </div>
+
+      <!-- 3-Step How It Works Workflow section -->
+      <div class="how-it-works-section" style="margin-top: 80px;">
+        <div class="section-header">
+          <h2>Three Steps to Defending Your Yield</h2>
+          <p>Learn how the AgriSense diagnostic core processes plant cells and provides cures.</p>
+        </div>
+
+        <div class="workflow-steps-grid">
+          <!-- Step 1 -->
+          <div class="workflow-step-card glass-card">
+            <div class="step-badge">01</div>
+            <div class="step-card-icon"><i class="fa-solid fa-camera"></i></div>
+            <h3>Foliage Field Scan</h3>
+            <p>Farmer snaps or uploads a clear crop photograph in high bright daylight.</p>
+            <!-- Greenhouse hydroponics illustration -->
+            <img class="step-card-thumb" src="assets/greenhouse_hydroponics.png" alt="Hydroponics green rows inside greenhouse">
+          </div>
+          <!-- Step 2 -->
+          <div class="workflow-step-card glass-card">
+            <div class="step-badge">02</div>
+            <div class="step-card-icon"><i class="fa-solid fa-brain"></i></div>
+            <h3>Neural Analysis</h3>
+            <p>AI scans chloroplast density grids and surface spots against thousands of strains.</p>
+            <!-- Leaf diagnostics illustration -->
+            <img class="step-card-thumb" src="assets/phone_scan_leaf.png" alt="Phone scanning details on a green leaf specimen">
+          </div>
+          <!-- Step 3 -->
+          <div class="workflow-step-card glass-card">
+            <div class="step-badge">03</div>
+            <div class="step-card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3>Actionable Plan</h3>
+            <p>Retrieve immediate organic spraying and clinical chemistry care plans in 3 seconds.</p>
+            <!-- LED greenhouse row illustration -->
+            <img class="step-card-thumb" src="assets/farmer_greenhouse.png" alt="Agronomist examining crops in a greenhouse under LED lights">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Professional Advisory Board -->
+      <div class="section-header" style="margin-top: 80px; margin-bottom: 40px;">
+        <h2>Professional Advisory Board</h2>
+        <p>AgriSense is backed by certified agronomists and plant pathology specialists working to protect global crop yields.</p>
+      </div>
+
+      <div class="about-grid">
+        <div class="glass-card agronomist-card">
+          <div class="agronomist-avatar-circle"><i class="fa-solid fa-user-doctor"></i></div>
+          <h4>Dr. Elena Vance</h4>
+          <span>Senior Plant Pathologist</span>
+          <p>Elena has spent 15 years researching cereal grain epidemics. She supervises our Rust and fungal prediction modules.</p>
+          <div class="expert-rating"><i class="fa-solid fa-star"></i> 4.9 Expert Advisor</div>
+        </div>
+        
+        <div class="glass-card agronomist-card">
+          <div class="agronomist-avatar-circle"><i class="fa-solid fa-seedling"></i></div>
+          <h4>Dr. Rajesh Kumar</h4>
+          <span>Agronomy Extension Lead</span>
+          <p>Rajesh coordinates base farming outreach and soil fertility advisories, matching organic treatments to crop species.</p>
+          <div class="expert-rating"><i class="fa-solid fa-star"></i> 5.0 Soil Specialist</div>
+        </div>
+        
+        <div class="glass-card agronomist-card">
+          <div class="agronomist-avatar-circle"><i class="fa-solid fa-flask-vial"></i></div>
+          <h4>Dr. Sophia Martinez</h4>
+          <span>Crop Chemistry Director</span>
+          <p>Sophia certifies our biological controls and systemic fungicide recommendations, keeping toxicity levels optimal.</p>
+          <div class="expert-rating"><i class="fa-solid fa-star"></i> 4.8 Chem Advisor</div>
+        </div>
+      </div>
+
+      <!-- Features engineering list row -->
+      <div class="engineering-features-row glass-card">
+        <h3>Engineered for the Field</h3>
+        <div class="features-list-cols">
+          <div class="list-bullet"><i class="fa-solid fa-circle-check"></i> Offline fallback diagnostic database storage</div>
+          <div class="list-bullet"><i class="fa-solid fa-circle-check"></i> Drip-irrigation specific precaution routines</div>
+          <div class="list-bullet"><i class="fa-solid fa-circle-check"></i> High accuracy multi-pigment visual scanners</div>
+          <div class="list-bullet"><i class="fa-solid fa-circle-check"></i> Secure Supabase integration for encrypted farmer logs</div>
+        </div>
+      </div>
+      
+      <div class="about-support-box">
+        <div class="support-details-left">
+          <h3>Need Farm Visits or Custom Analysis?</h3>
+          <p>Our regional expert teams conduct physical crop inspections, chemical soil reviews, and custom field maps to resolve persistent disease challenges.</p>
+          <div class="support-contact-info-list">
+            <div class="support-contact-item"><i class="fa-solid fa-envelope"></i> experts@agrisense.org</div>
+            <div class="support-contact-item"><i class="fa-solid fa-phone"></i> +91 7990601062</div>
+            <div class="support-contact-item"><i class="fa-solid fa-location-dot"></i> Agricultural Innovation Hub, Ahmedabad, CO</div>
+          </div>
+        </div>
+        
+        <div class="glass-card about-contact-form">
+          <h4>Send Inquiry to Agronomist Board</h4>
+          <form id="about-advisory-form">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-size: 11px;">Your Name</label>
+              <input type="text" class="form-control" placeholder="Rajesh Kumar" required style="padding: 10px 12px; font-size:13px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-size: 11px;">Farm Location</label>
+              <input type="text" class="form-control" placeholder="Central Plains Valley" required style="padding: 10px 12px; font-size:13px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-size: 11px;"> FOLIAGE SYMPTOMS / TOPIC</label>
+              <textarea class="form-control" placeholder="Yellow concentric spots on lower tomato leaves..." required style="padding: 10px 12px; font-size:13px; min-height: 80px; font-family: var(--font-sans);"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; padding: 10px 18px; font-size: 13px;"><i class="fa-solid fa-paper-plane"></i> Submit Inquiry</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Bottom Crop outline outline CTA band in green -->
+      <div class="about-footer-cta-band bg-forest-green text-center text-white">
+        <i class="fa-solid fa-leaf text-glow-leaf"></i>
+        <h3>AgriSense Agricultural Pathologist Coalition</h3>
+        <span>Securing Global Fields • One Scanned Specimen at a Time</span>
+      </div>
+    </section>
+
+    <!-- SECTION 9: DEDICATED LOGIN SCREEN -->
+    <section id="view-login" class="view-section">
+      <div class="auth-full-screen-centered">
+        <div class="auth-card">
+          <!-- Close button -->
+          <a href="#home" class="close-auth-card" aria-label="Close authentication page"><i class="fa-solid fa-xmark"></i></a>
+          
+          <!-- Card Header Tabs -->
+          <div class="auth-card-tabs">
+            <span class="auth-card-tab active" onclick="window.location.hash = '#login'" data-translate="auth_tab_login">Farmer Login</span>
+            <span class="auth-card-tab" onclick="window.location.hash = '#register'" data-translate="auth_tab_register">Register Farmer</span>
+          </div>
+
+          <div class="auth-error-msg" id="login-error-container-full" style="display: none; margin-bottom: 20px;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="login-error-text-full">Incorrect login credentials.</span>
+          </div>
+
+          <form id="farmer-login-form-full">
+            <div class="form-group">
+              <label for="login-email-full" data-translate="lbl_email">Email Address</label>
+              <div class="form-input-container">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="login-email-full" class="form-control" placeholder="farmer@village.com" data-translate-placeholder="placeholder_farmer_email" required autocomplete="username">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="login-password-full" data-translate="lbl_password">Password</label>
+              <div class="form-input-container">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="login-password-full" class="form-control" placeholder="enter password" data-translate-placeholder="placeholder_password" required autocomplete="current-password">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-auth-submit" style="width: 100%;"><i class="fa-solid fa-arrow-right-to-bracket"></i> <span data-translate="btn_login">Login Access</span></button>
+          </form>
+
+          <p class="auth-redirect-footer">
+            <span data-translate="lbl_dont_have_acct">Don't have a registered farm?</span> <a href="#register" class="text-primary font-bold" data-translate="auth_tab_register">Register Farmer</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 10: DEDICATED REGISTRATION SCREEN -->
+    <section id="view-register" class="view-section">
+      <div class="auth-full-screen-centered">
+        <div class="auth-card">
+          <!-- Close button -->
+          <a href="#home" class="close-auth-card" aria-label="Close authentication page"><i class="fa-solid fa-xmark"></i></a>
+
+          <!-- Card Header Tabs -->
+          <div class="auth-card-tabs">
+            <span class="auth-card-tab" onclick="window.location.hash = '#login'" data-translate="auth_tab_login">Farmer Login</span>
+            <span class="auth-card-tab active" onclick="window.location.hash = '#register'" data-translate="auth_tab_register">Register Farmer</span>
+          </div>
+
+          <div class="auth-error-msg" id="register-error-container-full" style="display: none; margin-bottom: 20px;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="register-error-text-full">Registration failed. Please try again.</span>
+          </div>
+
+          <form id="farmer-register-form-full">
+            <div class="form-group">
+              <label for="register-name-full" data-translate="lbl_farmer_name">Farmer Name</label>
+              <div class="form-input-container">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="register-name-full" class="form-control" placeholder="e.g. Rajesh Kumar" data-translate-placeholder="placeholder_farmer_name" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="register-email-full" data-translate="lbl_email">Email Address</label>
+              <div class="form-input-container">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="register-email-full" class="form-control" placeholder="farmer@village.com" data-translate-placeholder="placeholder_farmer_email" required autocomplete="username">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="register-password-full" data-translate="lbl_password">Create Password</label>
+              <div class="form-input-container">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="register-password-full" class="form-control" placeholder="minimum 6 characters" data-translate-placeholder="placeholder_password_min" minlength="6" required autocomplete="new-password">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-auth-submit" style="width: 100%;"><i class="fa-solid fa-user-plus"></i> <span data-translate="btn_register">Complete Registration</span></button>
+          </form>
+
+          <p class="auth-redirect-footer">
+            <span data-translate="lbl_already_have_acct">Already have a registered farm?</span> <a href="#login" class="text-primary font-bold" data-translate="auth_tab_login">Farmer Login</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- AUXILIARY AUTH MODAL OVERLAY (Fallback / Quick Login support) -->
+  <div class="modal-overlay" id="auth-modal-overlay">
+    <div class="glass-card auth-modal">
+      <button class="close-modal" id="btn-close-auth"><i class="fa-solid fa-xmark"></i></button>
+      
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-form="auth-form-login" data-translate="auth_tab_login">Farmer Login</button>
+        <button class="auth-tab" data-form="auth-form-register" data-translate="auth_tab_register">Register Farmer</button>
+      </div>
+
+      <!-- Login Form Wrapper -->
+      <div class="auth-form-wrapper active" id="auth-form-login">
+        <div class="auth-error-msg" id="login-error-container">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="login-error-text">Incorrect login credentials.</span>
+        </div>
+        
+        <form id="farmer-login-form" autocomplete="on">
+          <div class="form-group">
+            <label for="login-email" data-translate="lbl_email">Email Address</label>
+            <div class="form-input-container">
+              <i class="fa-solid fa-envelope"></i>
+              <input type="email" id="login-email" class="form-control" placeholder="enter registered email" data-translate-placeholder="placeholder_farmer_email" required autocomplete="username">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="login-password" data-translate="lbl_password">Password</label>
+            <div class="form-input-container">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" id="login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;" data-translate="btn_login"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login Access</button>
+        </form>
+      </div>
+
+      <!-- Registration Form Wrapper -->
+      <div class="auth-form-wrapper" id="auth-form-register">
+        <div class="auth-error-msg" id="register-error-container">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="register-error-text">Failed to register. Please try again.</span>
+        </div>
+
+        <form id="farmer-register-form">
+          <div class="form-group">
+            <label for="register-name" data-translate="lbl_farmer_name">Farmer Name</label>
+            <div class="form-input-container">
+              <i class="fa-solid fa-user"></i>
+              <input type="text" id="register-name" class="form-control" placeholder="e.g. Rajesh Kumar" data-translate-placeholder="placeholder_farmer_name" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="register-email" data-translate="lbl_email">Email Address</label>
+            <div class="form-input-container">
+              <i class="fa-solid fa-envelope"></i>
+              <input type="email" id="register-email" class="form-control" placeholder="farmer@village.com" data-translate-placeholder="placeholder_farmer_email" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="register-password" data-translate="lbl_password">Create Password</label>
+            <div class="form-input-container">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" id="register-password" class="form-control" placeholder="minimum 6 characters" data-translate-placeholder="placeholder_password_min" minlength="6" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;" data-translate="btn_register"><i class="fa-solid fa-user-plus"></i> Complete Registration</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING CHATBOT UI WIDGET (OmniDimension Mock & Script Insertion Area) -->
+  <div class="chatbot-trigger" id="chat-launcher" title="AgriSense Botanist Assistant">
+    <i class="fa-solid fa-comments"></i>
+  </div>
+
+  <div class="glass-card chatbot-widget" id="chat-window-container">
+    <div class="chat-header">
+      <div class="chat-bot-identity">
+        <div class="chat-avatar">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div class="chat-bot-details">
+          <h4>AgriSense Bot</h4>
+          <span>Active Specialist</span>
+        </div>
+      </div>
+      <button class="close-modal" id="btn-close-chat" style="position: relative; top: 0; right: 0; font-size: 16px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Chat Messages Scroll Pane -->
+    <div class="chat-messages" id="chat-messages-pane">
+      <div class="msg-bubble msg-bot">
+        Hello Farmer! I am your AgriSense Botanist AI assistant. Ask me questions about crops, soil nutrients, seasonal treatments, or crop disease remedies!
+      </div>
+    </div>
+
+    <!-- Chat Input Section -->
+    <div class="chat-input-bar">
+      <input type="text" class="chat-input" id="chat-user-input" placeholder="Type a farming query...">
+      <button class="btn-send-chat" id="btn-submit-chat"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- Footer Info -->
+  <footer id="site-footer" style="border-top: 1px solid hsl(var(--border-glass)); padding: 20px 0; text-align: center; color: hsl(var(--text-secondary)); font-size: 13px;">
+    <div class="container">
+      <p>&copy; 2026 AgriSense Platform Core. Empowering smart agricultural diagnostics globally.</p>
+    </div>
+  </footer>
+
+  <!-- CORE CODE LOGIC SCRIPTS -->
+  <script src="js/diseases.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- ========================================== -->
+  <!-- OMNIDIMENSION CHATBOT INTEGRATION SCRIPT TAG -->
+  <!-- Replace the commented block below with your chatbot script tag when ready. -->
+  <!--
+  <script src="https://cdn.omnidimension.com/chatbot-widget.js" data-token="YOUR_OMNIDIMENSION_TOKEN" async></script>
+  -->
+  <!-- ========================================== -->
+
+</body>
+</html>
